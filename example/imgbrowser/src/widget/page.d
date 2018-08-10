@@ -2,8 +2,6 @@
 // Copyright 2018 KanzakiKino
 module imgbrowser.widget.page;
 import imgbrowser.util.htmlimg,
-       imgbrowser.task.decode,
-       imgbrowser.task.download,
        imgbrowser.context;
 import w4d, g4d;
 
@@ -38,9 +36,16 @@ class PageWidget : VerticalScrollPanelWidget
             auto url = _searcher.pop;
             if ( url == "" ) break;
 
-            auto task = new DecodeTask( url );
-            ImgBrowser.app.addTask( task );
-            task.onFinish = &addImage;
+            try {
+                auto media = new MediaFile( url );
+                auto bmp   = media.decodeNextImage();
+                addImage( bmp );
+                bmp.dispose();
+                media.dispose();
+            } catch ( Exception e ) {
+                import std.stdio;
+                "Failed decoding: %s (%s)".writefln(url,e.msg);
+            }
         }
     }
 }
